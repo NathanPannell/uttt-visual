@@ -98,7 +98,6 @@ function App() {
 
   const playMove = async (move, player) => {
     // Update board state for the move
-    // setGame(game + move);
     let tempBoard;
     setState((prevState) => {
       tempBoard = [...prevState];

@@ -45,7 +45,7 @@ const Miniboard = ({ row, update, winner, active }) => {
         className="absolute top-0 left-0 w-full h-full flex justify-center items-center"
         style={{ pointerEvents: "none", opacity: 0.3 }}
       >
-        <span style={{ fontSize: "12vw" }}>{icon}</span>
+        <span className="text-6xl">{icon}</span>
       </div>
     </div>
   );

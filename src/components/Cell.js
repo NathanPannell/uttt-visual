@@ -28,10 +28,10 @@ const Cell = ({ info, update }) => {
   return (
     <div
       onClick={handleClick}
-      className={`border-gray-300 border-2 flex items-center justify-center ${cursorStyle}`}
-      style={{ width: "5vw", height: "5vw" }}
+      className={` border-gray-300 border-2 flex items-center justify-center aspect-square ${cursorStyle}`}
+      // style={{ width: "100%", height: "100%" }}
     >
-      <span style={{ fontSize: "3vw" }}>{icon}</span>
+      <span className="text-sm">{icon}</span>
     </div>
   );
 };
