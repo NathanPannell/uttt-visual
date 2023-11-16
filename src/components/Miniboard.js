@@ -1,44 +1,52 @@
 import React from "react";
 import Cell from "./Cell";
 
-const Miniboard = ({ row, update }) => {
-  const bingos = ["012", "345", "678", "036", "147", "258", "048", "246"];
+const Miniboard = ({ row, update, winner, active }) => {
+  let background;
+  let icon;
+  let newRow;
 
-  function getState(row) {
-    for (const bingo of bingos) {
-      if (
-        row[bingo[0]].state != 0 &&
-        row[bingo[0]].state === row[bingo[1]].state &&
-        row[bingo[1]].state === row[bingo[2]].state
-      ) {
-        return row[bingo[0]].state;
-      }
-    }
-
-    for (let i = 0; i < 9; i++) {
-      if (row[i].state === 0 || row[i].state === undefined) {
-        return 0;
-      }
-    }
-    return 3;
+  if (active && winner === 0) {
+    newRow = row.map((obj) => {
+      return {
+        ...obj,
+        state: obj.state === 0 || obj.state === undefined ? 2 : obj.state,
+      };
+    });
+  } else {
+    newRow = row;
   }
 
-  let background = "bg transparent";
-  let state = getState(row);
-  if (state === 1) {
-    background = "bg-red-200";
-  } else if (state === -1) {
+  if (winner === 0) {
+    background = "bg-transparent";
+  }
+  if (winner === 1) {
+    // player 1 wins
+    background = "bg-yellow-200";
+    icon = row[0].player;
+  } else if (winner === -1) {
+    // player 2 wins
     background = "bg-blue-200";
-  } else if (state === 3) {
+    icon = row[0].opponent;
+  } else if (winner === 2) {
+    // stalemate
     background = "bg-gray-200";
+    icon = "🟰";
   }
 
   // Corrected destructuring
   return (
-    <div className={"grid grid-cols-3 aspect-square border-4 border-gray-700 " + background}>
-      {row.map((info, index) => (
-        <Cell key={info.id} info={info} update={update} /> // Added key and corrected destructuring
+    <div className={"relative grid grid-cols-3 aspect-square border-4 border-gray-700 " + background}>
+      {newRow.map((info) => (
+        <Cell key={info.id} info={info} update={update} />
       ))}
+
+      <div
+        className="absolute top-0 left-0 w-full h-full flex justify-center items-center"
+        style={{ pointerEvents: "none", opacity: 0.3 }}
+      >
+        <span style={{ fontSize: "12vw" }}>{icon}</span>
+      </div>
     </div>
   );
 };
