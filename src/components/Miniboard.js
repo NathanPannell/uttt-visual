@@ -1,16 +1,16 @@
 import React from "react";
 import Cell from "./Cell";
 
-const Miniboard = ({ row, update, winner, active }) => {
+const Miniboard = ({ row, settings, update, winner, active }) => {
   let background;
   let icon;
   let newRow;
 
-  if (active && winner === 0) {
+  if (active.board && winner === 0) {
     newRow = row.map((obj) => {
       return {
         ...obj,
-        state: obj.state === 0 || obj.state === undefined ? 2 : obj.state,
+        state: obj.state === 0 || obj.state === undefined ? active.turn : obj.state,
       };
     });
   } else {
@@ -18,25 +18,28 @@ const Miniboard = ({ row, update, winner, active }) => {
   }
 
   if (winner === 0) {
-    background = "bg-transparent";
+    background = "transparent";
   }
   if (winner === 1) {
     // player 1 wins
-    background = "bg-yellow-200";
-    icon = row[0].player;
+    icon = settings.playerIcon;
+    background = `hsl(${settings.playerColor}, 100%, 80%)`;
   } else if (winner === -1) {
     // player 2 wins
-    background = "bg-blue-200";
-    icon = row[0].opponent;
+    icon = settings.opponentIcon;
+    background = `hsl(${settings.opponentColor}, 100%, 80%)`;
   } else if (winner === 2) {
     // stalemate
-    background = "bg-gray-200";
+    background = "rgba(0,0,0,0.4)";
     icon = "🟰";
   }
 
   // Corrected destructuring
   return (
-    <div className={"relative grid grid-cols-3 aspect-square border-4 border-gray-700 " + background}>
+    <div
+      className={"relative justify-stretch  grid grid-cols-3 aspect-square border-4 border-gray-700"}
+      style={{ background: background }}
+    >
       {newRow.map((info) => (
         <Cell key={info.id} info={info} update={update} />
       ))}
