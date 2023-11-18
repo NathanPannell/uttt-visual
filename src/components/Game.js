@@ -39,7 +39,12 @@ function Game() {
         </div>
         <div>
           Player 1:
-          <input type="text" className="w-6 mx-2" value={playerIcon} onChange={(e) => setPlayerIcon(e.target.value)} />
+          <input
+            type="text"
+            className="w-8 m-2 text-xl border-2 rounded-md"
+            value={playerIcon}
+            onChange={(e) => setPlayerIcon(e.target.value)}
+          />
           <InputSlider
             styles={{
               active: {
@@ -58,7 +63,7 @@ function Game() {
           Player 2:
           <input
             type="text"
-            className="w-6 mx-2"
+            className="w-8 m-2 text-xl border-2 rounded-md"
             value={opponentIcon}
             onChange={(e) => setOpponentIcon(e.target.value)}
           />
