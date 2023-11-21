@@ -12,10 +12,10 @@ function Game() {
   };
 
   // customization options
-  const [playerColor, setPlayerColor] = useState(220);
-  const [playerIcon, setPlayerIcon] = useState("❌");
-  const [opponentColor, setOpponentColor] = useState(0);
-  const [opponentIcon, setOpponentIcon] = useState("⭕");
+  const [playerColor, setPlayerColor] = useState(20);
+  const [playerIcon, setPlayerIcon] = useState("🟠");
+  const [opponentColor, setOpponentColor] = useState(220);
+  const [opponentIcon, setOpponentIcon] = useState("🟦");
 
   return (
     <div className="App w-full flex justify-center items-center">
