@@ -35,7 +35,7 @@ function Game() {
         />
         <div>
           Speed:
-          <InputSlider className="ml-4" axis="x" x={speed} xmin={50} xmax={2000} onChange={updateSpeed} />
+          <InputSlider className="ml-4" axis="x" x={speed} xmin={0} xmax={100} onChange={updateSpeed} />
         </div>
         <div>
           Player 1:
