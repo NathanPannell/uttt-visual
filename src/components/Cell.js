@@ -29,7 +29,9 @@ const Cell = ({ info, update, customization }) => {
   return (
     <button
       onClick={handleClick}
-      className={`flex items-center justify-center cursor-default ${info.borders}`}
+      className={`flex items-center justify-center ${
+        Math.abs(info.cellState) === 2 ? "cursor-pointer" : "cursor-default"
+      } ${info.borders}`}
       style={{ background: backgroundMapping[info.cellState] }}
     >
       <span className="text-sm">{iconMapping[info.cellState]}</span>
