@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Miniboard from "./Miniboard";
 
 function MainBoard({ options }) {
-  const delay = () => new Promise((res) => setTimeout(res, options.speedRef.current));
+  const delay = () => new Promise((res) => setTimeout(res, 2050 - options.speedRef.current));
 
   // interior borders for game board
   const getBorderStyle = (index) => ({
