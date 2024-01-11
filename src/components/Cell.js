@@ -1,14 +1,34 @@
 import React from "react";
 
 const Cell = ({ info, update, customization }) => {
-  // broadcast click to App.js
+  /* 
+  
+  This is the component that displays individual markers and registers clicks
+
+  - Handle click and broadcast
+  - Display cell marker
+  - Display cell background color
+
+  */
+
+  // Broadcast click to parent controlling game string
   const handleClick = () => {
     if (Math.abs(info.cellState) === 2) {
       update(info.id);
     }
   };
 
-  // custom marker for played cell
+  /* 
+  Cell state
+  
+  (+): Player 1
+  (-): Player 2
+  
+  0: Blank/Invalid
+  1: Filled
+  2: Blank/Valid
+  */
+  // Custom marker for played cell
   const iconMapping = {
     1: customization.player.icon,
     "-1": customization.opponent.icon,
@@ -17,7 +37,7 @@ const Cell = ({ info, update, customization }) => {
     0: <div className="text-transparent">0</div>,
   };
 
-  // highlight playable cells
+  // Highlight playable cells
   const backgroundMapping = {
     1: "transparent",
     2: `hsl(${customization.player.color}, 100%, 92%)`,

@@ -2,7 +2,20 @@ import React from "react";
 import Cell from "./Cell";
 
 const Miniboard = ({ update, borders, customization, info }) => {
-  // interior borders for game board
+  /* 
+  
+  This is the 3x3 board controlling 9 <Cell /> components
+
+  - Style border
+  - Assign 'valid' state for possible next moves
+  - For closed position board:
+      1. Background color of winning player
+      2. Background icon of winning player
+      3. Disable interaction (clicking) of miniboard
+  
+  */
+
+  // Interior borders for game board
   const getBorderStyle = (index) => ({
     borderR: index % 3 < 2 ? "black" : "transparent",
     borderL: index % 3 > 0 ? "black" : "transparent",
@@ -10,7 +23,7 @@ const Miniboard = ({ update, borders, customization, info }) => {
     borderT: index > 2 ? "black" : "transparent",
   });
 
-  // replace empty cells with 'active' cells when board is active
+  // Mark empty cells active, if miniboard is active
   const newRow =
     info.active && !info.winner
       ? info.row.map(({ cellState, ...rest }) => ({
@@ -19,7 +32,7 @@ const Miniboard = ({ update, borders, customization, info }) => {
         }))
       : info.row;
 
-  // overlay icons
+  // Overlay icons, for won miniboards
   const iconMapping = {
     0: "",
     1: customization.player.icon,
@@ -27,15 +40,14 @@ const Miniboard = ({ update, borders, customization, info }) => {
     2: "🟰",
   };
 
-  // background color for open, win, lose, and stalemate states
   const backgroundMapping = {
-    0: "transparent",
-    1: `hsl(${customization.player.color}, 100%, 80%)`,
-    "-1": `hsl(${customization.opponent.color}, 100%, 80%)`,
-    2: "rgba(0,0,0,0.4)",
+    0: "transparent", // Open position
+    1: `hsl(${customization.player.color}, 100%, 80%)`, // Player 1 win
+    "-1": `hsl(${customization.opponent.color}, 100%, 80%)`, // Player 2 win
+    2: "rgba(0,0,0,0.4)", // Stalemate
   };
 
-  // overlay element for finished board
+  // Overlay element for finished board, disables interaction with closed miniboards
   const renderOverlay = (winner) => {
     return winner ? (
       <div
