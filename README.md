@@ -32,3 +32,13 @@ chars = [chr(i + 32) for i in range(81)]
 # Decode characters -> numbers
 nums = [ord(char) - 32 for char in chars]
 ```
+
+## Tournament mode
+
+The text field is the input for how many games to display at a time. For best results, input 1, 2, 3, 4 or 8 only. After inputting, click the run button to show the games.
+
+## Required installs
+
+Using npm or yarn, install the following -
+concurrently, @mui/material, @emotion/react, @emotion/styled, express, mongoose, @mui/icons-material  
+(or run npm ci or npm i if using npm)
