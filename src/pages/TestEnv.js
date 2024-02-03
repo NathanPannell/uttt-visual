@@ -49,6 +49,53 @@ function TestEnv() {
     setGameString(tempGameString);
   };
 
+  function gameHasWinner(gameLog) {
+    function unconvert(symbol) {
+      const offset = 32;
+      const intPosition = symbol.charCodeAt(0) - offset;
+      return [Math.floor(intPosition / 9), intPosition % 9];
+    }
+
+    // fill in both players markers
+    const tempBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
+    let player = 1;
+    for (let i = 0; i < gameLog.length; i++) {
+      const symbol = gameLog[i];
+      const [row, col] = unconvert(symbol);
+      tempBoard[row][col] = player;
+      player *= -1;
+    }
+
+    function checkLine(box) {
+      const bingos = ["012", "345", "678", "036", "147", "258", "048", "246"];
+      const row = box.flat();
+      for (const bingo of bingos) {
+        const [a, b, c] = bingo.split("").map((num) => parseFloat(num));
+        if (row[a] && row[a] === row[b] && row[b] === row[c]) {
+          return row[a]; // Winner found
+        }
+      }
+      return 0;
+    }
+
+    // fill in miniboard wins
+    const tempMiniboard = Array.from({ length: 3 }, () => Array(3).fill(0));
+    for (let i = 0; i < 3; i++) {
+      for (let k = 0; k < 3; k++) {
+        tempMiniboard[i][k] = checkLine(
+          tempBoard.slice(i * 3, (i + 1) * 3).map((row) => row.slice(k * 3, (k + 1) * 3))
+        );
+      }
+    }
+    return checkLine(tempMiniboard);
+  }
+
+  const eval_game_string = async (e) => {
+    e.preventDefault();
+
+    console.log(0 != gameHasWinner(gameString));
+  };
+
   // This could likely be optimized
   const playMove = async (move) => {
     // Update board state for the move
@@ -85,6 +132,9 @@ function TestEnv() {
         <div>
           <button onClick={run} type="submit" className="mr-2 bg-slate-100 p-2 rounded-lg">
             Run ▶️
+          </button>
+          <button onClick={eval_game_string} type="submit" className="mr-2 bg-slate-100 p-2 rounded-lg">
+            Eval
           </button>
         </div>
         <h2 className="mt-4">Game History</h2>

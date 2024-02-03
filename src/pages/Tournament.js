@@ -12,21 +12,22 @@ function Tournament() {
 	*/
 
   const [matches, setMatches] = useState();
-  const [participants, setParticipants] = useState(); //Use this for getting player names and stuff! See schema in server.js -> filename regex for bot name?
+  const [participants, setParticipants] = useState();
   const [matchData, setMatchData] = useState();
-  const [games, setGames] = useState([]);
-  const [numberOfGames, setNumberOfGames] = useState(0);
+  const [participantData, setParticipantData] = useState();
+  const [games, setGames] = useState([]); // (gameString, is player1 going first)
+  const [numberOfGames, setNumberOfGames] = useState(8);
   const [colClassName, setColClassName] = useState("grid grid-cols-4 w-full");
 
   useEffect(() => {
-    matches && participants && createFinalMatchData();
+    matches && participants && (createFinalMatchData() || createFinalParticipantData());
   }, [matches]);
 
   useEffect(() => {
     matchData &&
       setGames(
         matchData.map((match) => {
-          return getWinnerGame(match.match_log);
+          return getWinnerGame(match.match_log, match.winner == match.player1);
         })
       );
   }, [matchData]);
@@ -63,30 +64,44 @@ function Tournament() {
     );
   };
 
-  function checkNotStale(gameLog) {
+  const createFinalParticipantData = () => {
+    setParticipantData(
+      participants.map((p) => {
+        return {
+          player_id: p.player_id,
+          player_name: p.file_name,
+          bot_name: p.name,
+        };
+      })
+    );
+  };
+
+  function gameHasWinner(gameLog) {
     function unconvert(symbol) {
       const offset = 32;
       const intPosition = symbol.charCodeAt(0) - offset;
       return [Math.floor(intPosition / 9), intPosition % 9];
     }
 
-    // fill in markers
+    // fill in both players markers
     const tempBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
-    for (let i = 0; i < gameLog.length; i += 2) {
+    let player = 1;
+    for (let i = 0; i < gameLog.length; i++) {
       const symbol = gameLog[i];
       const [row, col] = unconvert(symbol);
-      tempBoard[row][col] = 1;
+      tempBoard[row][col] = player;
+      player *= -1;
     }
 
     function checkLine(box) {
-      for (let i = 0; i < 3; i++) {
-        if (Math.abs(box[i].reduce((acc, val) => acc + val, 0)) === 3) return true; // horizontal
-        if (Math.abs(box.map((row) => row[i]).reduce((acc, val) => acc + val, 0)) === 3) return true; // vertical
+      const bingos = ["012", "345", "678", "036", "147", "258", "048", "246"];
+      const row = box.flat();
+      for (const bingo of bingos) {
+        const [a, b, c] = bingo.split("").map((num) => parseFloat(num));
+        if (row[a] && row[a] === row[b] && row[b] === row[c]) {
+          return true; // Winner found
+        }
       }
-
-      // diagonals
-      if (Math.abs(box.map((row, i) => row[i]).reduce((acc, val) => acc + val, 0)) === 3) return true;
-      if (Math.abs(box.map((row, i) => row[2 - i]).reduce((acc, val) => acc + val, 0)) === 3) return true;
       return false;
     }
 
@@ -103,40 +118,30 @@ function Tournament() {
     return checkLine(tempMiniboard);
   }
 
-  const getWinnerGame = (match_log) => {
-    let even = 0;
-    let odd = 0;
-    match_log.forEach((game) => {
-      game.length % 2 === 0 ? (even = even + 1) : (odd = odd + 1);
-    });
-    if (even > odd) {
-      const temp = match_log.filter((game) => game.length % 2 === 0);
-      temp.sort((a, b) => b.length - a.length); // reverse sorting, greatest to smallest
-      for (let x in temp) {
-        // checkNotStale does not work properly
-        if (checkNotStale(x)) {
-          return x;
+  const getWinnerGame = (match_log, p1_wins) => {
+    let result_game = "";
+    let p1_going_first = null;
+    for (let i = 0; i < 10; i++) {
+      const gameString = match_log[i];
+      if ((p1_wins && i % 2 != gameString.length % 2) || (!p1_wins && i % 2 == gameString.length % 2)) {
+        if (gameHasWinner(gameString) && gameString.length > result_game.length) {
+          result_game = gameString;
+          p1_going_first = i % 2;
         }
       }
-      // Returning the largest game that was won or stalemate by the winner
-      return temp[0];
-    } else {
-      const temp = match_log.filter((game) => game.length % 2 !== 0);
-      temp.sort((a, b) => b.length - a.length); // reverse sorting, greatest to smallest
-      for (let x in temp) {
-        if (checkNotStale(x)) {
-          return x;
-        }
-      }
-      return temp[0];
     }
+    return [result_game, p1_going_first];
   };
 
-  // SETUP GAMES HERE!!
-
   const [gameStrings, setGameStrings] = useState(Array(games.length).fill("")); // Array of game strings
+  const [activePlayers, setActivePlayers] = useState(Array(games.length).fill({}));
   const delay = (ms) => new Promise((res) => setTimeout(res, ms)); // Dynamic timeout for slowing animation
   const run = async (e) => {
+    e.preventDefault();
+    console.log(games);
+  };
+
+  const run1 = async (e) => {
     e.preventDefault();
     console.log(matchData);
 
@@ -155,7 +160,10 @@ function Tournament() {
       }
 
       setGameStrings([...newGameStrings]);
-      await delay(1000); // Wait for 1 second
+      if (i > 3) {
+        // Start with 4 moves on the board
+        await delay(1000); // Wait for 1 second
+      }
     }
     setGames(popFromFront(numberOfGames, games));
   };
@@ -173,12 +181,12 @@ function Tournament() {
   const [opponentIcon, setOpponentIcon] = useState("🟦");
 
   return (
-    <div className="App w-full flex-col justify-center items-center">
+    <div className="App w-full flex-col justify-center items-center m-4 gap-4">
+      <h1>Round 1</h1>
       <TextField
         id="outlined-basic"
-        label="Outlined"
         variant="outlined"
-        defaultValue={"0"}
+        defaultValue={"8"}
         onChange={(e) => {
           setNumberOfGames(parseInt(e.target.value));
         }}
@@ -187,33 +195,35 @@ function Tournament() {
         variant="contained"
         endIcon={<NavigateNextIcon />}
         onClick={(e) => {
-          setColClassName(`grid grid-cols-${numberOfGames > 4 ? 4 : numberOfGames} w-full`);
+          setColClassName(`grid grid-cols-${numberOfGames > 3 ? Math.ceil(numberOfGames / 2) : numberOfGames} w-full`);
           run(e);
         }}
         type="submit"
-        className="mr-2 bg-slate-100 p-2 rounded-lg"
       >
         Run
       </Button>
       <div className={colClassName}>
         {gameStrings.map((gameString, index) => {
           return (
-            <div className="flex-col my-8">
-              <MainBoard
-                key={index}
-                update={() => {}}
-                gameString={gameString}
-                options={{
-                  player: {
-                    color: playerColor,
-                    icon: playerIcon,
-                  },
-                  opponent: {
-                    color: opponentColor,
-                    icon: opponentIcon,
-                  },
-                }}
-              />
+            <div className="my-8 flex-col">
+              <h2 className="text-center">Adrian Chase... vs. Tyler Allan...</h2>
+              <div className="text-center">
+                <MainBoard
+                  key={index}
+                  update={() => {}}
+                  gameString={gameStrings[index]}
+                  options={{
+                    player: {
+                      color: playerColor,
+                      icon: playerIcon,
+                    },
+                    opponent: {
+                      color: opponentColor,
+                      icon: opponentIcon,
+                    },
+                  }}
+                />
+              </div>
             </div>
           );
         })}
