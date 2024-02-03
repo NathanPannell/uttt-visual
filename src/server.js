@@ -1,5 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
+
 const app = express();
 const cors = require("cors");
 
@@ -8,6 +10,8 @@ app.use(cors());
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
+
+app.use(cors());
 
 const uri = "mongodb+srv://UTTTuser1:UTTTuser1@utttcluster.8na1d4l.mongodb.net/UTTTBracket?retryWrites=true&w=majority";
 
@@ -37,6 +41,8 @@ const participantSchema = new mongoose.Schema({
   player_id: Number,
   name: String,
   file_name: String,
+  player_emoji: Object,
+  player_bg_color: Number,
 });
 
 // Mongoose model for Participants

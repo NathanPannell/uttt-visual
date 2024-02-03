@@ -15,6 +15,7 @@ function Tournament() {
   const [participants, setParticipants] = useState(); //Use this for getting player names and stuff! See schema in server.js -> filename regex for bot name?
   const [matchData, setMatchData] = useState();
   const [games, setGames] = useState([]);
+  const [gameData, setGameData] = useState([]); //Corresponding array where each index has the match's data for each index (game string) in the games array
   const [numberOfGames, setNumberOfGames] = useState(0);
   const [colClassName, setColClassName] = useState("grid grid-cols-4 w-full");
 
@@ -27,6 +28,19 @@ function Tournament() {
       setGames(
         matchData.map((match) => {
           return getWinnerGame(match.match_log);
+        })
+      );
+    matchData &&
+      setGameData(
+        matchData.map((match) => {
+          return {
+            player1_emoji: match.player1.player_emoji,
+            player1_bg_color: match.player1.player_bg_color,
+            player1_name: match.player1.file_name,
+            player2_emoji: match.player2.player_emoji,
+            player2_bg_color: match.player2.player_bg_color,
+            player2_name: match.player2.file_name,
+          };
         })
       );
   }, [matchData]);
@@ -158,6 +172,7 @@ function Tournament() {
       await delay(1000); // Wait for 1 second
     }
     setGames(popFromFront(numberOfGames, games));
+    setGameData(popFromFront(numberOfGames, gameData));
   };
 
   const popFromFront = (amountToPop, arrToPopFrom) => {
@@ -167,10 +182,10 @@ function Tournament() {
   };
 
   // Disabled selection temporarily, this will be updated via backend??
-  const [playerColor, setPlayerColor] = useState(20);
-  const [playerIcon, setPlayerIcon] = useState("🟠");
-  const [opponentColor, setOpponentColor] = useState(220);
-  const [opponentIcon, setOpponentIcon] = useState("🟦");
+  // const [playerColor, setPlayerColor] = useState(20);
+  // const [playerIcon, setPlayerIcon] = useState("🟠");
+  // const [opponentColor, setOpponentColor] = useState(220);
+  // const [opponentIcon, setOpponentIcon] = useState("🟦");
 
   return (
     <div className="App w-full flex-col justify-center items-center">
@@ -187,7 +202,7 @@ function Tournament() {
         variant="contained"
         endIcon={<NavigateNextIcon />}
         onClick={(e) => {
-          setColClassName(`grid grid-cols-${numberOfGames > 4 ? 4 : numberOfGames} w-full`);
+          setColClassName(`grid grid-cols-${numberOfGames > 4 ? Math.round(numberOfGames / 2) : numberOfGames} w-full`);
           run(e);
         }}
         type="submit"
@@ -195,6 +210,7 @@ function Tournament() {
       >
         Run
       </Button>
+      <Button onClick={() => console.log(participants)} endIcon={<NavigateNextIcon />} />
       <div className={colClassName}>
         {gameStrings.map((gameString, index) => {
           return (
@@ -205,12 +221,12 @@ function Tournament() {
                 gameString={gameString}
                 options={{
                   player: {
-                    color: playerColor,
-                    icon: playerIcon,
+                    color: gameData[index].player1_bg_color,
+                    icon: gameData[index].player1_emoji,
                   },
                   opponent: {
-                    color: opponentColor,
-                    icon: opponentIcon,
+                    color: gameData[index].player2_bg_color,
+                    icon: gameData[index].player2_emoji,
                   },
                 }}
               />
