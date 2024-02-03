@@ -46,14 +46,14 @@ function Tournament() {
             player1_emoji: match.player1.player_emoji,
             player1_bg_color: match.player1.player_bg_color,
             player1_name:
-              match.player1.file_name.length >= 23
-                ? match.player1.file_name.slice(0, 20) + "..."
+              match.player1.file_name.length >= 20
+                ? match.player1.file_name.slice(0, 17) + "..."
                 : match.player1.file_name,
             player2_emoji: match.player2.player_emoji,
             player2_bg_color: match.player2.player_bg_color,
             player2_name:
-              match.player2.file_name.length >= 23
-                ? match.player2.file_name.slice(0, 20) + "..."
+              match.player2.file_name.length >= 20
+                ? match.player2.file_name.slice(0, 17) + "..."
                 : match.player2.file_name,
           };
         })
