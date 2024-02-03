@@ -11,13 +11,14 @@ function Tournament() {
 
 	*/
 
-  const [matches, setMatches] = useState();
   const [participants, setParticipants] = useState(); //Use this for getting player names and stuff! See schema in server.js -> filename regex for bot name?
+  const [matches, setMatches] = useState();
   const [matchData, setMatchData] = useState();
   const [games, setGames] = useState([]);
   const [gameData, setGameData] = useState([]); //Corresponding array where each index has the match's data for each index (game string) in the games array
-  const [numberOfGames, setNumberOfGames] = useState(0);
-  const [colClassName, setColClassName] = useState("grid grid-cols-4 w-full");
+  const [numberOfGames, setNumberOfGames] = useState(8);
+  const [havePopped, setHavePopped] = useState(false);
+  const [colClassName, setColClassName] = useState("grid grid-cols-4 w-full items-center");
 
   useEffect(() => {
     matches && participants && createFinalMatchData();
@@ -27,7 +28,15 @@ function Tournament() {
     matchData &&
       setGames(
         matchData.map((match) => {
-          return getWinnerGame(match.match_log);
+          /*
+          game = {
+            gameString = "adasdasdasd",
+            first_player = [1,2],
+            game_index = [0,9],
+            p1_wins
+          }
+          */
+          return getWinnerGame(match.match_log, match.player1 === match.winner ? 1 : 2);
         })
       );
     matchData &&
@@ -36,10 +45,16 @@ function Tournament() {
           return {
             player1_emoji: match.player1.player_emoji,
             player1_bg_color: match.player1.player_bg_color,
-            player1_name: match.player1.file_name,
+            player1_name:
+              match.player1.file_name.length > 13
+                ? match.player1.file_name.slice(0, 13) + "..."
+                : match.player1.file_name,
             player2_emoji: match.player2.player_emoji,
             player2_bg_color: match.player2.player_bg_color,
-            player2_name: match.player2.file_name,
+            player2_name:
+              match.player2.file_name.length > 13
+                ? match.player2.file_name.slice(0, 13) + "..."
+                : match.player2.file_name,
           };
         })
       );
@@ -77,31 +92,33 @@ function Tournament() {
     );
   };
 
-  function checkNotStale(gameLog) {
+  function gameHasWinner(gameLog) {
     function unconvert(symbol) {
       const offset = 32;
       const intPosition = symbol.charCodeAt(0) - offset;
       return [Math.floor(intPosition / 9), intPosition % 9];
     }
 
-    // fill in markers
+    // fill in both players markers
     const tempBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
-    for (let i = 0; i < gameLog.length; i += 2) {
+    let player = 1;
+    for (let i = 0; i < gameLog.length; i++) {
       const symbol = gameLog[i];
       const [row, col] = unconvert(symbol);
-      tempBoard[row][col] = 1;
+      tempBoard[row][col] = player;
+      player *= -1;
     }
 
     function checkLine(box) {
-      for (let i = 0; i < 3; i++) {
-        if (Math.abs(box[i].reduce((acc, val) => acc + val, 0)) === 3) return true; // horizontal
-        if (Math.abs(box.map((row) => row[i]).reduce((acc, val) => acc + val, 0)) === 3) return true; // vertical
+      const bingos = ["012", "345", "678", "036", "147", "258", "048", "246"];
+      const row = box.flat();
+      for (const bingo of bingos) {
+        const [a, b, c] = bingo.split("").map((num) => parseFloat(num));
+        if (row[a] && row[a] === row[b] && row[b] === row[c]) {
+          return row[a]; // Winner found
+        }
       }
-
-      // diagonals
-      if (Math.abs(box.map((row, i) => row[i]).reduce((acc, val) => acc + val, 0)) === 3) return true;
-      if (Math.abs(box.map((row, i) => row[2 - i]).reduce((acc, val) => acc + val, 0)) === 3) return true;
-      return false;
+      return 0;
     }
 
     // fill in miniboard wins
@@ -113,66 +130,75 @@ function Tournament() {
         );
       }
     }
-
     return checkLine(tempMiniboard);
   }
 
-  const getWinnerGame = (match_log) => {
-    let even = 0;
-    let odd = 0;
-    match_log.forEach((game) => {
-      game.length % 2 === 0 ? (even = even + 1) : (odd = odd + 1);
-    });
-    if (even > odd) {
-      const temp = match_log.filter((game) => game.length % 2 === 0);
-      temp.sort((a, b) => b.length - a.length); // reverse sorting, greatest to smallest
-      for (let x in temp) {
-        // checkNotStale does not work properly
-        if (checkNotStale(x)) {
-          return x;
-        }
-      }
-      // Returning the largest game that was won or stalemate by the winner
-      return temp[0];
-    } else {
-      const temp = match_log.filter((game) => game.length % 2 !== 0);
-      temp.sort((a, b) => b.length - a.length); // reverse sorting, greatest to smallest
-      for (let x in temp) {
-        if (checkNotStale(x)) {
-          return x;
-        }
-      }
-      return temp[0];
-    }
-  };
+  const getWinnerGame = (match_log, winning_player) => {
+    let gameString = "";
+    let first_player = 0;
+    let game_index = 1;
 
-  // SETUP GAMES HERE!!
+    const p1_wins = winning_player === 1;
+
+    for (let i = 0; i < 10; i++) {
+      const tempGameString = match_log[i];
+      if ((p1_wins && i % 2 !== tempGameString.length % 2) || (!p1_wins && i % 2 === tempGameString.length % 2)) {
+        if (gameHasWinner(tempGameString) && tempGameString.length > gameString.length) {
+          gameString = tempGameString;
+          game_index = i;
+          first_player = 1 + (game_index % 2);
+        }
+      }
+    }
+    return {
+      gameString,
+      first_player,
+      game_index,
+      p1_wins,
+    };
+  };
 
   const [gameStrings, setGameStrings] = useState(Array(games.length).fill("")); // Array of game strings
   const delay = (ms) => new Promise((res) => setTimeout(res, ms)); // Dynamic timeout for slowing animation
   const run = async (e) => {
     e.preventDefault();
-    console.log(matchData);
+    console.log(matchData, games, gameData);
 
-    if (numberOfGames === 0 || games.length === 0) return;
-    const numberOfGamesToDisplay = numberOfGames > games.length ? games.length : numberOfGames;
+    let newGameData;
+    let newGames;
+
+    if (havePopped) {
+      newGameData = popFromFront(numberOfGames, gameData);
+      newGames = popFromFront(numberOfGames, games);
+      setGameData(newGameData);
+      setGames(newGames);
+    } else {
+      newGameData = gameData;
+      newGames = games;
+      setHavePopped(true);
+    }
+
+    if (numberOfGames === 0 || newGames.length === 0) return;
+    const numberOfGamesToDisplay = numberOfGames > newGames.length ? newGames.length : numberOfGames;
     const newGameStrings = Array(numberOfGamesToDisplay).fill("");
-    let longestGame = games.slice(0, numberOfGamesToDisplay).reduce(function (a, b) {
+    const gamesToDisplay = newGames
+      .map((game) => {
+        return game.gameString;
+      })
+      .slice(0, numberOfGamesToDisplay);
+    let longestGame = gamesToDisplay.reduce(function (a, b) {
       return a.length > b.length ? a : b;
     });
-    const gamesToDisplay = games.slice(0, numberOfGamesToDisplay);
     for (let i = 0; i < longestGame.length; i++) {
-      // Move index
       for (let j = 0; j < numberOfGamesToDisplay; j++) {
-        // Game selected
         newGameStrings[j] += gamesToDisplay[j].length > i ? gamesToDisplay[j][i] : "";
       }
-
       setGameStrings([...newGameStrings]);
-      await delay(1000); // Wait for 1 second
+
+      if (i >= 4) {
+        await delay(300); // Wait for 1 second after playing first 4 moves
+      }
     }
-    setGames(popFromFront(numberOfGames, games));
-    setGameData(popFromFront(numberOfGames, gameData));
   };
 
   const popFromFront = (amountToPop, arrToPopFrom) => {
@@ -181,19 +207,12 @@ function Tournament() {
     return temp;
   };
 
-  // Disabled selection temporarily, this will be updated via backend??
-  // const [playerColor, setPlayerColor] = useState(20);
-  // const [playerIcon, setPlayerIcon] = useState("🟠");
-  // const [opponentColor, setOpponentColor] = useState(220);
-  // const [opponentIcon, setOpponentIcon] = useState("🟦");
-
   return (
     <div className="App w-full flex-col justify-center items-center">
       <TextField
         id="outlined-basic"
-        label="Outlined"
         variant="outlined"
-        defaultValue={"0"}
+        defaultValue={"8"}
         onChange={(e) => {
           setNumberOfGames(parseInt(e.target.value));
         }}
@@ -211,15 +230,12 @@ function Tournament() {
         Run
       </Button>
       <Button onClick={() => console.log(participants)} endIcon={<NavigateNextIcon />} />
-      <div className={colClassName}>
+      <div className="grid grid-cols-4 w-full">
         {gameStrings.map((gameString, index) => {
-          return (
-            <div className="flex-col my-8">
-              <MainBoard
-                key={index}
-                update={() => {}}
-                gameString={gameString}
-                options={{
+          const first_player = games[index].first_player;
+          const options =
+            first_player === 1
+              ? {
                   player: {
                     color: gameData[index].player1_bg_color,
                     icon: gameData[index].player1_emoji,
@@ -228,8 +244,51 @@ function Tournament() {
                     color: gameData[index].player2_bg_color,
                     icon: gameData[index].player2_emoji,
                   },
-                }}
-              />
+                }
+              : {
+                  opponent: {
+                    color: gameData[index].player1_bg_color,
+                    icon: gameData[index].player1_emoji,
+                  },
+                  player: {
+                    color: gameData[index].player2_bg_color,
+                    icon: gameData[index].player2_emoji,
+                  },
+                };
+
+          const game_over = gameString === games[index].gameString;
+          let title;
+          if (!game_over) {
+            title = (
+              <h2 className="text-center mb-2">
+                {gameData[index].player1_name} ({gameData[index].player1_emoji}) vs. {gameData[index].player2_name} (
+                {gameData[index].player2_emoji})
+              </h2>
+            );
+          } else if (games[index].p1_wins) {
+            title = (
+              <h2 className="text-center mb-2">
+                <b>
+                  {gameData[index].player1_name} ({gameData[index].player1_emoji})
+                </b>{" "}
+                vs. {gameData[index].player2_name} ({gameData[index].player2_emoji})
+              </h2>
+            );
+          } else {
+            title = (
+              <h2 className="text-center mb-2">
+                {gameData[index].player1_name} ({gameData[index].player1_emoji}) vs.{" "}
+                <b>
+                  {gameData[index].player2_name} ({gameData[index].player2_emoji})
+                </b>
+              </h2>
+            );
+          }
+
+          return (
+            <div className="flex flex-col items-center justify-center my-4 w-full">
+              {title}
+              <MainBoard key={index} update={() => {}} gameString={gameString} options={options} />
             </div>
           );
         })}
