@@ -54,7 +54,7 @@ const Cell = ({ info, update, customization }) => {
       } ${info.borders}`}
       style={{ background: backgroundMapping[info.cellState] }}
     >
-      <span className="text-sm">{iconMapping[info.cellState]}</span>
+      <span className="text-lg">{iconMapping[info.cellState]}</span>
     </button>
   );
 };
