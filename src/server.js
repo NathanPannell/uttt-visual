@@ -9,7 +9,8 @@ app.use(express.json());
 
 app.use(cors());
 
-const uri = "mongodb+srv://UTTTuser1:UTTTuser1@utttcluster.8na1d4l.mongodb.net/UTTTBracket?retryWrites=true&w=majority";
+const uri =
+  "mongodb+srv://UTTTuser1:UTTTuser1@utttcluster.8na1d4l.mongodb.net/UTTTBracket?retryWrites=true&w=majority";
 
 mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -42,7 +43,11 @@ const participantSchema = new mongoose.Schema({
 });
 
 // Mongoose model for Participants
-const Participant = mongoose.model("Participant", participantSchema, "Participants");
+const Participant = mongoose.model(
+  "Participant",
+  participantSchema,
+  "Participants"
+);
 
 db.once("open", () => {
   console.log("Connected to MongoDB");
